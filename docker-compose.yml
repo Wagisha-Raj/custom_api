@@ -1,0 +1,54 @@
+version: '3.1'
+
+services:
+  db:
+    image: postgres:15
+    environment:
+      - POSTGRES_DB=postgres
+      - POSTGRES_USER=odoo
+      - POSTGRES_PASSWORD=odoo
+    volumes:
+      - odoo17-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U odoo -d postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  odoo:
+    image: odoo:17
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "8069:8069"
+    environment:
+      - HOST=db
+      - PORT=5432
+      - USER=odoo
+      - PASSWORD=odoo
+      - ADMIN_PASSWD=Qwertypoiu
+      - LIMIT_TIME_REAL=300
+      - DB_NAME=postgres
+      - LOG_LEVEL=debug
+      - PGHOST=db
+      - PGPORT=5432
+      - PGUSER=odoo
+      - PGPASSWORD=odoo
+      - PGDATABASE=postgres
+    command: >
+      odoo
+      --db_host=db
+      --db_port=5432
+      --db_user=odoo
+      --db_password=odoo
+      --database=postgres
+      --http-interface=0.0.0.0
+      --log-level=debug
+    volumes:
+      - odoo17-web-data:/var/lib/odoo
+      - ./conditional_order_api:/mnt/extra-addons/conditional_order_api
+
+volumes:
+  odoo17-db-data:
+  odoo17-web-data:
